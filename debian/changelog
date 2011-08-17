@@ -1,3 +1,9 @@
+perlbal (1.78-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Kiall Mac Innes <kiall@managedit.ie>  Mon, 25 Apr 2011 18:28:42 +0100
+
 perlbal (1.70-1) unstable; urgency=low
 
   * New upstream release.
