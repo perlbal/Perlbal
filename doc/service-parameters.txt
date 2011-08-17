@@ -75,6 +75,10 @@ For all services:
 |                           |    |                     |service that maps onto     |
 |                           |    |                     |other services.            |
 |---------------------------+----+---------------------+---------------------------|
+|                           |    |                     |Path to directory          |
+|ssl_ca_path                |    |                     |containing certificates for|
+|                           |    |                     |SSL.                       |
+|---------------------------+----+---------------------+---------------------------|
 |ssl_cert_file              |    |certs/server-cert.pem|Path to certificate PEM    |
 |                           |    |                     |file for SSL.              |
 |---------------------------+----+---------------------+---------------------------|
@@ -83,7 +87,10 @@ For all services:
 |ssl_key_file               |    |certs/server-key.pem |Path to private key PEM    |
 |                           |    |                     |file for SSL.              |
 |---------------------------+----+---------------------+---------------------------|
-|                           |    |                     |A Net::Netmask filter (e.g.|
+|ssl_verify_mode            |int |0                    |SSL verification mode      |
+|---------------------------+----+---------------------+---------------------------|
+|                           |    |                     |A comma separated list of  |
+|                           |    |                     |Net::Netmask filters (e.g. |
 |                           |    |                     |10.0.0.0/24, see           |
 |                           |    |                     |Net::Netmask) that         |
 |trusted_upstream_proxies   |    |                     |determines whether upstream|

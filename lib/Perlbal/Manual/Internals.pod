@@ -775,7 +775,7 @@ Int, 0-100; % chance to take a standard priority request when we're in pressure 
 
 =item trusted_upstream_proxies
 
-L<Net::Netmask> object containing netmasks for trusted upstreams.
+Array of L<Net::Netmask> objects containing netmasks for trusted upstreams.
 
 
 =item always_trusted

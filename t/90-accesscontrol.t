@@ -72,6 +72,11 @@ ok(manage("SET trusted_upstream_proxies = 127.0.0.1"), "Turning trusted upstream
 ok(!check(), "Denied");
 ok(check(["X-Forwarded-For" => "1.1.1.1"]), "Allowed with XFF header");
 
+ok(manage("SET trusted_upstream_proxies = 10.0.0.0/24, 127.0.0.1"), "Turning trusted upstream proxies on for multiple netmasks");
+
+ok(!check(), "Denied");
+ok(check(["X-Forwarded-For" => "1.1.1.1"]), "Allowed with XFF header");
+
 ok(manage("SET test.AccessControl.use_observed_ip = 0"), "Turning off observed IP");
 ok(!check(["X-Forwarded-For" => "1.1.1.1"]), "Denied with XFF header");
 

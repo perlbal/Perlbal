@@ -70,9 +70,6 @@
 * getter commands to retrieve the running config (GET?) or DUMP/SHOW/LIST
   http://rt.livejournal.org/Ticket/Display.html?id=2783
 
-* add tests for 'trusted_upstream_proxies' and 'always_trusted'
-  http://rt.livejournal.org/Ticket/Display.html?id=2784
-
 * get rid of httpres vs. res distinction in HTTPHeaders
   http://rt.livejournal.org/Ticket/Display.html?id=2785
 

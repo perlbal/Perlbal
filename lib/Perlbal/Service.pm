@@ -376,7 +376,7 @@ our $tunables = {
     },
 
     'trusted_upstream_proxies' => {
-        des => "A Net::Netmask filter (e.g. 10.0.0.0/24, see Net::Netmask) that determines whether upstream clients are trusted or not, where trusted means their X-Forwarded-For/etc headers are not munged.",
+        des => "A comma separated list of Net::Netmask filters (e.g. 10.0.0.0/24, see Net::Netmask) that determines whether upstream clients are trusted or not, where trusted means their X-Forwarded-For/etc headers are not munged.",
         check_role => "*",
         check_type => sub {
             my ($self, $val, $errref) = @_;
@@ -385,9 +385,23 @@ our $tunables = {
                 return 0;
             }
 
-            return 1 if $self->{trusted_upstream_proxies} = Net::Netmask->new2($val);
-            $$errref = "Error defining trusted upstream proxies: " . Net::Netmask::errstr();
-            return 0;
+            my @val = split /\s*,\s*/, $val;
+            my @trusted_upstreams = ();
+
+            for my $ip (@val) {
+                my $net = Net::Netmask->new2($ip);
+                unless ($net) {
+                    $$errref = "Error defining trusted upstream proxies: " . Net::Netmask::errstr();
+                    return 0;
+                }
+                push @trusted_upstreams, $net;
+            }
+
+            unless (@trusted_upstreams) {
+                $$errref = "Error defining trusted upstream proxies: None found";
+                return 0;
+            }
+            $self->{trusted_upstream_proxies} = \@trusted_upstreams;
         },
         setter => sub {
             my ($self, $val, $set, $mc) = @_;
@@ -1456,7 +1470,9 @@ sub trusted_ip {
     return 0 unless $tmap;
 
     # try to use it as a Net::Netmask object
-    return 1 if eval { $tmap->match($ip); };
+    for my $tmap (@{ $self->{trusted_upstream_proxies} }) {
+        return 1 if eval { $tmap->match($ip); };
+    }
     return 0;
 }
 

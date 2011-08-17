@@ -289,7 +289,7 @@ Default is C<certs/server-key.pem>.
 
 =item B<trusted_upstream_proxies> = Net::Netmask filter
 
-A L<Net::Netmask> filter (e.g. 10.0.0.0/24, see L<Net::Netmask>) that determines whether upstream clients are trusted or not, where trusted means their X-Forwarded-For/etc headers are not munged.
+A comma separated list of L<Net::Netmask> filters (e.g. 10.0.0.0/24, see L<Net::Netmask>) that determines whether upstream clients are trusted or not, where trusted means their X-Forwarded-For/etc headers are not munged.
 
 
 =item B<upload_status_listeners> = comma separated list of hosts
