@@ -541,7 +541,7 @@ sub _serve_request {
 
         # now set whether this is keep-alive or not
         $res->header("Date", HTTP::Date::time2str());
-        $res->header("Server", "Perlbal");
+        $res->header("Server", "Perlbal") if $self->{service}{server_tokens};
         $res->header("Last-Modified", $lastmod);
 
         if (-f _) {
@@ -708,7 +708,7 @@ sub _serve_request_multiple_poststat {
     }
 
     $res->header("Date", HTTP::Date::time2str());
-    $res->header("Server", "Perlbal");
+    $res->header("Server", "Perlbal") if $self->{service}{server_tokens};
     $res->header("Last-Modified", $lastmod);
     $res->header("Content-Type",   $mime);
     # has to happen after content-length is set to work:
@@ -852,7 +852,7 @@ sub _simple_response {
         $res->header('Content-Length', length($body));
     }
 
-    $res->header('Server', 'Perlbal');
+    $res->header('Server', 'Perlbal') if $self->{service}{server_tokens};
 
     $self->setup_keepalive($res);
 
@@ -899,7 +899,7 @@ sub send_full_response {
         $res->header('Content-Length', length($$bref));
     }
 
-    $res->header('Server', 'Perlbal'); # Tunable?
+    $res->header('Server', 'Perlbal') if $self->{service}{server_tokens};
     # $res->header('Date', # We should do this
 
     $self->setup_keepalive($res, $options->{persist_client});

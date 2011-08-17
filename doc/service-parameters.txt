@@ -91,6 +91,11 @@ For all services:
 |                           |    |                     |where trusted means their  |
 |                           |    |                     |X-Forwarded-For/etc headers|
 |                           |    |                     |are not munged.            |
+|---------------------------+----+---------------------+---------------------------|
+|                           |    |                     |Whether to provide a       |
+|server_tokens              |bool|true                 |'Server' header in the     |
+|                           |    |                     |headers that are sent back |
+|                           |    |                     |to the user                |
 +----------------------------------------------------------------------------------+
 
 Only for 'reverse_proxy' services:

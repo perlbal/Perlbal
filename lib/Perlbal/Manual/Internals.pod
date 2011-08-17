@@ -1009,6 +1009,11 @@ Comma-separated seconds (full or partial) to delay between retries.
 Milliseconds of latency to add to request.
 
 
+=item server_tokens
+
+Boolean; whether to provide a "Server" header.
+
+
 =item _stat_requests
 
 Total requests to this service.

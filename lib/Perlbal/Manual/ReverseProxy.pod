@@ -310,6 +310,14 @@ What path the OPTIONS request sent by C<verify_backend> should use.
 
 Default is C<*>.
 
+=item B<server_tokens> = bool
+
+Whether to provide a "Server" header.
+
+Perlbal by default adds a header to all replies (such as the web_server role). By setting this default to "off", you can prevent Perlbal from identifying itself.
+
+Default is C<on>.
+
 =back
 
 

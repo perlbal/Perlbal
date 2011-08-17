@@ -107,6 +107,14 @@ If PUT requests are enabled, require this many levels of directories to already 
 
 Default is 0.
 
+=item B<server_tokens> = bool
+
+Whether to provide a "Server" header.
+
+Perlbal by default adds a header to all replies (such as the web_server role). By setting this default to "off", you can prevent Perlbal from identifying itself.
+
+Default is C<on>.
+
 
 =back
 

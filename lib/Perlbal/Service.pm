@@ -101,6 +101,7 @@ use fields (
             'enable_error_retries',  # bool: whether we should retry requests after errors
             'error_retry_schedule',  # string of comma-separated seconds (full or partial) to delay between retries
             'latency',               # int: milliseconds of latency to add to request
+            'server_tokens',         # bool: whether to provide a "Server" header
 
             # stats:
             '_stat_requests',       # total requests to this service
@@ -611,6 +612,12 @@ our $tunables = {
         check_role => '*',
     },
 
+    'server_tokens' => {
+        des        => 'Whether to provide a "Server" header.',
+        check_role => '*',
+        check_type => 'bool',
+        default    => 1,
+    },
 
 };
 sub autodoc_get_tunables { return $tunables; }
