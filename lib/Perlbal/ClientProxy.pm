@@ -283,7 +283,7 @@ sub backend_response_received {
         return 1;
     }
 
-    return $self->{service}->run_hook('backend_response_received', $be);
+    return if $self->{service}->run_hook('reproxy_response_received', $be);
 
     # a response means that we are no longer currently waiting on a reproxy, and
     # don't want to retry this URI

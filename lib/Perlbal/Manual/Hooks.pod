@@ -161,6 +161,15 @@ Called in L<Perlbal::ClientHTTPBase>.
 Available in role C<web_server>.
 
 
+=head3 reproxy_response_received
+
+Called as soon as response headers are read from a reproxied backend. If you return a true value, will stop all handling at that point.
+
+Called in L<Perlbal::ClientProxy>.
+
+Available in role C<reverse_proxy>.
+
+
 =head3 return_to_base
 
 Called when a request has been finished, and control of the Client* object is about to be transferred back to ownership by a service selector. Return a true value if the perlbal core action in this situation should be bypassed.

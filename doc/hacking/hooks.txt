@@ -107,6 +107,14 @@ HANDLER     backend_response_received   Perlbal::BackendHTTP
 Called as soon as response headers are read from the backend.  If you
 return a true value, will stop all handling at that point.
 
+HANDLER     reproxy_response_received   Perlbal::ClientProxy
+Called as soon as response headers are read from a reproxied backend. If you
+return a true value, will stop all handling at that point.
+
+Called in L<Perlbal::ClientProxy>.
+
+Available in role C<reverse_proxy>.
+
 HANDLER     make_high_priority          Perlbal::ClientProxy
 Called when a request is received and right before we're about to determine
 if this request is high priority or not.  Return a true value to make the
