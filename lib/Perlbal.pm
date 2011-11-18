@@ -1145,7 +1145,7 @@ sub MANAGE_load {
         my $file = $class . ".pm";
         $file =~ s!::!/!g;
 
-        my $rv = eval "use $class; 1;";
+        my $rv = eval "use $class; $class->can('load');";
 
         if ($rv) {
             $good_error = undef;
@@ -1156,7 +1156,7 @@ sub MANAGE_load {
         $good_error = $@ unless defined $good_error;
 
         # If the file existed perl will place an entry in %INC (though it will be undef due to compilation error)
-        if (exists $INC{$file}) {
+        if ($@ and exists $INC{$file}) {
             $good_error = $@;
             last;
         }
