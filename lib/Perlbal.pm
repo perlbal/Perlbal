@@ -266,13 +266,14 @@ sub run_manage_command {
     $cmd =~ s/\s+$//;
     $cmd =~ s/\s+/ /g;
 
-    my $orig = $cmd; # save original case for some commands
-    $cmd =~ s/^([^=]+)/lc $1/e; # lowercase everything up to an =
-    return 1 unless $cmd =~ /^\S/;
-
     # expand variables
+    my $orig = $cmd; # save original case for some commands
+
     $cmd =~ s/\$\{(.+?)\}/_expand_config_var($1)/eg;
     $cmd =~ s/\$(\w+)/$ENV{$1}/g;
+
+    $cmd =~ s/^([^=]+)/lc $1/e; # lowercase everything up to an =
+    return 1 unless $cmd =~ /^\S/;
 
     $out ||= sub {};
     $ctx ||= Perlbal::CommandContext->new;
