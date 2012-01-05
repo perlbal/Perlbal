@@ -1,3 +1,6 @@
+NEXT_RELEASE:
+    -- Can use PERLBAL_REMOVE_FIELDS=1 to disable fields and improve performance
+
 1.79: 2011-06-15
 
     -- Make SSL sockets time out if they go stale, like we claimed was

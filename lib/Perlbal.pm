@@ -126,6 +126,13 @@ if ($ENV{PERLBAL_XS_HEADERS} && $XSModules{headers}) {
     Perlbal::XS::HTTPHeaders::enable();
 }
 
+# unactivate field::new 
+if ($ENV{PERLBAL_REMOVE_FIELDS}) {
+	use Perlbal::Fields;
+	Perlbal::Fields->remove();
+}
+
+
 # setup a USR1 signal handler that tells us to dump some basic statistics
 # of how we're doing to the syslog
 $SIG{'USR1'} = sub {
