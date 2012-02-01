@@ -1,3 +1,29 @@
+=head1 NAME
+
+Perlbal::Plugin::FlvStreaming - Enable FLV streaming with reverse proxy
+
+=head1 DESCRIPTION
+
+This plugin enable FLV streaming by modifying headers and prepending
+FLV header to the body.
+
+=head1 SYNOPSIS
+
+    LOAD FlvStreaming
+    
+    CREATE SERVICE flv_proxy
+      SET role    = reverse_proxy
+      SET plugins = FlvStreaming
+    ENABLE flv_proxy
+
+
+=head1 LICENSE
+
+This plugin is part of the Perlbal distribution, and as such can be
+distributed under the same licence terms as the rest of Perlbal.
+
+=cut
+
 package Perlbal::Plugin::FlvStreaming;
 
 use strict;
