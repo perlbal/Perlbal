@@ -260,7 +260,7 @@ The value needs to be defined and the content must be an existing directory (val
 
 An array reference containing the acceptable values:
 
-    check_type => ["yellow", "blue", "green"],
+    check_type => [enum => ["yellow", "blue", "green"]],
 
 
 =item file

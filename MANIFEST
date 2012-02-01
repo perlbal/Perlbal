@@ -64,6 +64,7 @@ lib/Perlbal/Plugin/Palimg.pm
 lib/Perlbal/Plugin/Queues.pm
 lib/Perlbal/Plugin/Redirect.pm
 lib/Perlbal/Plugin/Stats.pm
+lib/Perlbal/Plugin/Throttle.pm
 lib/Perlbal/Plugin/Vhosts.pm
 lib/Perlbal/Plugin/Vpaths.pm
 lib/Perlbal/Pool.pm
