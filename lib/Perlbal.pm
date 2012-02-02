@@ -1086,6 +1086,14 @@ sub MANAGE_pool {
     return $mc->ok;
 }
 
+sub MANAGE_default {
+    my $mc = shift->parse(qr/^default (\w+) ?= ?(.+)$/,
+                          "usage: DEFAULT <param> = <value>");
+
+    my ($key, $val) = $mc->args;
+    return Perlbal::Service::set_defaults($mc, $key => $val);
+}
+
 sub MANAGE_set {
     my $mc = shift->parse(qr/^set (?:(\w+)[\. ])?([\w\.]+) ?= ?(.+)$/,
                           "usage: SET [<service>] <param> = <value>");

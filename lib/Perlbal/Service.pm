@@ -110,6 +110,9 @@ use fields (
 # hash; 'role' => coderef to instantiate a client for this role
 our %PluginRoles;
 
+# used by set_defaults
+our $defaults = {};
+
 our $tunables = {
 
     'role' => {
@@ -790,9 +793,22 @@ sub init {
     for my $param (keys %$tunables) {
         my $tun     = $tunables->{$param};
         next unless $tun->{check_role} eq "*" || $tun->{check_role} eq $self->{role};
-        next unless exists $tun->{default};
-        $self->set($param, $tun->{default});
+
+        if (exists $defaults->{$param}) {
+            $self->set($param, $defaults->{$param});
+        } elsif (exists $tun->{default}) {
+            $self->set($param, $tun->{default});
+        }
     }
+}
+
+# Service default setter
+sub set_defaults {
+    my ($mc, %args) = @_;
+    foreach my $key (keys %args) {
+        $defaults->{$key} = $args{$key};
+    }
+    return $mc->ok;
 }
 
 # Service
