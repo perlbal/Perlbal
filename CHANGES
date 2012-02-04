@@ -1,3 +1,6 @@
+    -- Do vhost twiddling after all host header cleanups in order to standardize
+       with regular vhost configuration (Jason Stubbs <jasonbstubbs@gmail.com>)
+
     -- Force keepalives off when we haven't finished reading a request body, but we
        are already sending a response. (Jonathan Steinert <hachi@kuiki.net>)
 
