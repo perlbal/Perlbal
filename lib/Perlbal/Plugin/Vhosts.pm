@@ -106,12 +106,16 @@ sub vhost_selector {
         my ($match_on, $force) = @_;
 
         my $svc_name = $maps->{$match_on};
-        my $svc = $svc_name ? Perlbal->service($svc_name) : undef;
+        return 0 unless $svc_name || $force;
 
-        return 0 unless $svc || $force;
-
-        unless ($svc) {
+        unless ($svc_name) {
             $cb->_simple_response(404, "Not Found (no configured vhost)");
+            return 1;
+        }
+
+        my $svc = Perlbal->service($svc_name);
+        unless ($svc) {
+            $cb->_simple_response(500, "Failed to map vhost to service (misconfigured)");
             return 1;
         }
 
@@ -145,10 +149,14 @@ sub vhost_selector {
         my $alt_host = $1;
 
         my $svc_name = $maps->{"$vhost;using:$alt_host"};
-        my $svc = $svc_name ? Perlbal->service($svc_name) : undef;
-
-        unless ($svc) {
+        unless ($svc_name) {
             $cb->_simple_response(404, "Vhost twiddling not configured for requested pair.");
+            return 1;
+        }
+
+        my $svc = Perlbal->service($svc_name);
+        unless ($svc) {
+            $cb->_simple_response(500, "Failed to map vhost to service (misconfigured)");
             return 1;
         }
 
