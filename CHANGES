@@ -1,3 +1,6 @@
+    -- Fix handling of a www.exammple.com.:80 type host header in the vhost
+       plugin (Jason Stubbs <jasonbstubbs@gmail.com>)
+
     -- Do vhost twiddling after all host header cleanups in order to standardize
        with regular vhost configuration (Jason Stubbs <jasonbstubbs@gmail.com>)
 

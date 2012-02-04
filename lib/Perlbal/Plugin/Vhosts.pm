@@ -100,9 +100,6 @@ sub vhost_selector {
 
     my $vhost = $req->header("Host");
 
-    # Browsers and the Apache API considers 'www.example.com.' == 'www.example.com'
-    $vhost and $vhost =~ s/\.$//;
-
     my $uri = $req->request_uri;
     my $maps = $cb->{service}{extra_config}{_vhosts} ||= {};
 
@@ -136,6 +133,9 @@ sub vhost_selector {
 
     # Strip off the :portnumber, if any
     $vhost =~ s/:\d+$//;
+
+    # Browsers and the Apache API considers 'www.example.com.' == 'www.example.com'
+    $vhost and $vhost =~ s/\.$//;
 
     # ability to ask for one host, but actually use another.  (for
     # circumventing javascript/java/browser host restrictions when you
