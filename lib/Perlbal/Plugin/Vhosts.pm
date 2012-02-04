@@ -98,17 +98,14 @@ sub vhost_selector {
     my $req = $cb->{req_headers};
     return $cb->_simple_response(404, "Not Found (no reqheaders)") unless $req;
 
-    my $vhost = $req->header("Host");
-
-    my $uri = $req->request_uri;
     my $maps = $cb->{service}{extra_config}{_vhosts} ||= {};
 
     # returns 1 if done with client, 0 if no action taken
     my $map_using = sub {
         my ($match_on, $force) = @_;
 
-        my $map_name = $maps->{$match_on};
-        my $svc = $map_name ? Perlbal->service($map_name) : undef;
+        my $svc_name = $maps->{$match_on};
+        my $svc = $svc_name ? Perlbal->service($svc_name) : undef;
 
         return 0 unless $svc || $force;
 
@@ -120,6 +117,8 @@ sub vhost_selector {
         $svc->adopt_base_client($cb);
         return 1;
     };
+
+    my $vhost = $req->header("Host");
 
     #  foo.site.com  should match:
     #      foo.site.com
@@ -135,24 +134,26 @@ sub vhost_selector {
     $vhost =~ s/:\d+$//;
 
     # Browsers and the Apache API considers 'www.example.com.' == 'www.example.com'
-    $vhost and $vhost =~ s/\.$//;
+    $vhost =~ s/\.$//;
 
     # ability to ask for one host, but actually use another.  (for
     # circumventing javascript/java/browser host restrictions when you
     # actually control two domains).
-    if ($vhost && $uri =~ m!^/__using/([\w\.]+)(?:/\w+)(?:\?.*)?$!) {
+    if ($req->request_uri =~ m!^/__using/([\w\.]+)(?:/\w+)(?:\?.*)?$!) {
         my $alt_host = $1;
 
-        # update our request object's Host header, if we ended up switching them
-        # around with /__using/...
         my $svc_name = $maps->{"$vhost;using:$alt_host"};
         my $svc = $svc_name ? Perlbal->service($svc_name) : undef;
+
         unless ($svc) {
             $cb->_simple_response(404, "Vhost twiddling not configured for requested pair.");
             return 1;
         }
 
+        # update our request object's Host header, if we ended up switching them
+        # around with /__using/...
         $req->header("Host", $alt_host);
+
         $svc->adopt_base_client($cb);
         return 1;
     }
@@ -162,15 +163,10 @@ sub vhost_selector {
 
     # and now try wildcard mappings, removing one part of the domain
     # at a time until we find something, or end up at "*"
-
-    # first wildcard, prepending the "*."
     my $wild = "*.$vhost";
-    return if $map_using->($wild);
-
-    # now peel away subdomains
-    while ($wild =~ s/^\*\.[\w\-\_]+/*/) {
+    do {
         return if $map_using->($wild);
-    }
+    } while ($wild =~ s/^\*\.[\w\-\_]+/*/);
 
     # last option: use the "*" wildcard
     return $map_using->("*", 1);
