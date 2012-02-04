@@ -38,6 +38,7 @@ sub load {
 
         $ss->{extra_config}->{_vhosts} ||= {};
         $ss->{extra_config}->{_vhosts}{$host} = $target;
+        $ss->{extra_config}->{_vhost_twiddling} ||= ($host =~ /;/);
 
         return $mc->ok;
     });
@@ -139,7 +140,8 @@ sub vhost_selector {
     # ability to ask for one host, but actually use another.  (for
     # circumventing javascript/java/browser host restrictions when you
     # actually control two domains).
-    if ($req->request_uri =~ m!^/__using/([\w\.]+)(?:/\w+)(?:\?.*)?$!) {
+    if ($cb->{service}{extra_config}{_vhost_twiddling} &&
+          $req->request_uri =~ m!^/__using/([\w\.]+)(?:/\w+)(?:\?.*)?$!) {
         my $alt_host = $1;
 
         my $svc_name = $maps->{"$vhost;using:$alt_host"};
