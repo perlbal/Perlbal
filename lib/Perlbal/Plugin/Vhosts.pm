@@ -100,28 +100,7 @@ sub vhost_selector {
     return $cb->_simple_response(404, "Not Found (no reqheaders)") unless $req;
 
     my $maps = $cb->{service}{extra_config}{_vhosts} ||= {};
-
-    # returns 1 if done with client, 0 if no action taken
-    my $map_using = sub {
-        my ($match_on, $force) = @_;
-
-        my $svc_name = $maps->{$match_on};
-        return 0 unless $svc_name || $force;
-
-        unless ($svc_name) {
-            $cb->_simple_response(404, "Not Found (no configured vhost)");
-            return 1;
-        }
-
-        my $svc = Perlbal->service($svc_name);
-        unless ($svc) {
-            $cb->_simple_response(500, "Failed to map vhost to service (misconfigured)");
-            return 1;
-        }
-
-        $svc->adopt_base_client($cb);
-        return 1;
-    };
+    my $svc_name;
 
     my $vhost = $req->header("Host");
 
@@ -133,7 +112,7 @@ sub vhost_selector {
     #        *
 
     # if no vhost, just try the * mapping
-    return $map_using->("*", 1) unless $vhost;
+    goto USE_FALLBACK unless $vhost;
 
     # Strip off the :portnumber, if any
     $vhost =~ s/:\d+$//;
@@ -148,15 +127,9 @@ sub vhost_selector {
           $req->request_uri =~ m!^/__using/([\w\.]+)(?:/\w+)(?:\?.*)?$!) {
         my $alt_host = $1;
 
-        my $svc_name = $maps->{"$vhost;using:$alt_host"};
+        $svc_name = $maps->{"$vhost;using:$alt_host"};
         unless ($svc_name) {
             $cb->_simple_response(404, "Vhost twiddling not configured for requested pair.");
-            return 1;
-        }
-
-        my $svc = Perlbal->service($svc_name);
-        unless ($svc) {
-            $cb->_simple_response(500, "Failed to map vhost to service (misconfigured)");
             return 1;
         }
 
@@ -164,22 +137,36 @@ sub vhost_selector {
         # around with /__using/...
         $req->header("Host", $alt_host);
 
-        $svc->adopt_base_client($cb);
-        return 1;
+        goto USE_SERVICE;
     }
 
     # try the literal mapping
-    return if $map_using->($vhost);
+    goto USE_SERVICE if ($svc_name = $maps->{$vhost});
 
     # and now try wildcard mappings, removing one part of the domain
     # at a time until we find something, or end up at "*"
     my $wild = "*.$vhost";
     do {
-        return if $map_using->($wild);
+        goto USE_SERVICE if ($svc_name = $maps->{$wild});
     } while ($wild =~ s/^\*\.[\w\-\_]+/*/);
 
+  USE_FALLBACK:
     # last option: use the "*" wildcard
-    return $map_using->("*", 1);
+    $svc_name = $maps->{"*"};
+    unless ($svc_name) {
+        $cb->_simple_response(404, "Not Found (no configured vhost)");
+        return 1;
+    }
+
+  USE_SERVICE:
+    my $svc = Perlbal->service($svc_name);
+    unless ($svc) {
+        $cb->_simple_response(500, "Failed to map vhost to service (misconfigured)");
+        return 1;
+    }
+
+    $svc->adopt_base_client($cb);
+    return 1;
 }
 
 1;
