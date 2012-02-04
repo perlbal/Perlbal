@@ -1,3 +1,6 @@
+    -- Allow vhost mappings to be deleted via the management port.
+       (Jason Stubbs <jasonbstubbs@gmail.com>)
+
     -- Decrease overall CPU usage by 20% when using the vhost plugin.
        (Jason Stubbs <jasonbstubbs@gmail.com>)
 

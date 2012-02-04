@@ -21,8 +21,8 @@ sub load {
     my $class = shift;
 
     Perlbal::register_global_hook('manage_command.vhost', sub {
-        my $mc = shift->parse(qr/^vhost\s+(?:(\w+)\s+)?(\S+)\s*=\s*(\w+)$/,
-                              "usage: VHOST [<service>] <host_or_pattern> = <dest_service>");
+        my $mc = shift->parse(qr/^vhost\s+(?:(\w+)\s+)?(\S+)\s*=\s*(\w+)?$/,
+                              "usage: VHOST [<service>] <host_or_pattern> = [<dest_service>]");
         my ($selname, $host, $target) = $mc->args;
         unless ($selname ||= $mc->{ctx}{last_created}) {
             return $mc->err("omitted service name not implied from context");
@@ -36,9 +36,13 @@ sub load {
         return $mc->err("invalid host pattern: '$host'")
             unless $host =~ /^[\w\-\_\.\*\;\:]+$/;
 
-        $ss->{extra_config}->{_vhosts} ||= {};
-        $ss->{extra_config}->{_vhosts}{$host} = $target;
-        $ss->{extra_config}->{_vhost_twiddling} ||= ($host =~ /;/);
+        if ($target) {
+            $ss->{extra_config}->{_vhosts} ||= {};
+            $ss->{extra_config}->{_vhosts}{$host} = $target;
+            $ss->{extra_config}->{_vhost_twiddling} ||= ($host =~ /;/);
+        } else {
+            delete $ss->{extra_config}->{_vhosts}{$host};
+        }
 
         return $mc->ok;
     });
