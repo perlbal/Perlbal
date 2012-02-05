@@ -419,7 +419,6 @@ sub start_put_open {
                 return $self->start_put_open($path, $file);
             } elsif ($! == EEXIST && $self->{put_final_name}) {
                 # temp name collision, bail hard because this should be near impossible already
-                return $self->start_put_open($path, $file);
                 Perlbal::log('crit', "Failure to open exclusively $fs_path as temp file in PUT");
                 return $self->_simple_response(500);
             } else {
