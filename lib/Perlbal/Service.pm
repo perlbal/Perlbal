@@ -1182,17 +1182,6 @@ sub mark_node_used {
 sub get_client {
     my Perlbal::Service $self = shift;
 
-    my $ret = sub {
-        my Perlbal::ClientProxy $cp = shift;
-        $self->{waiting_client_count}--;
-        delete $self->{waiting_client_map}{$cp->{fd}};
-
-        # before we return, start another round of connections
-        $self->spawn_backends;
-
-        return $cp;
-    };
-
     # determine if we should jump straight to the high priority queue or
     # act as pressure relief on the standard queue
     my $hp_first = 1;
@@ -1211,24 +1200,33 @@ sub get_client {
             my $backlog = scalar @{$self->{waiting_clients}};
             print "Got from fast queue, in front of $backlog others\n";
         }
-        return $ret->($cp);
+        goto RETURN_CP;
     }
 
     # regular clients:
     while ($cp = shift @{$self->{waiting_clients}}) {
         next if $cp->{closed};
         print "Backend requesting client, got normal = $cp->{fd}.\n" if Perlbal::DEBUG >= 2;
-        return $ret->($cp);
+        goto RETURN_CP;
     }
 
     # low-priority (batch/idle) clients.
     while ($cp = shift @{$self->{waiting_clients_lowpri}}) {
         next if $cp->{closed};
         print "Backend requesting client, got low priority = $cp->{fd}.\n" if Perlbal::DEBUG >= 2;
-        return $ret->($cp);
+        goto RETURN_CP;
     }
 
     return undef;
+
+  RETURN_CP:
+    $self->{waiting_client_count}--;
+    delete $self->{waiting_client_map}{$cp->{fd}};
+
+    # before we return, start another round of connections
+    $self->spawn_backends;
+
+    return $cp;
 }
 
 # given a backend, verify it's generation
