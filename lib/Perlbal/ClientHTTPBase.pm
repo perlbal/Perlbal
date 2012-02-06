@@ -310,21 +310,22 @@ sub handle_request {
     # re-enable reads.
     $self->watch_read(0);
 
-    my $select = sub {
-        # now that we have headers, it's time to tell the selector
-        # plugin that it's time for it to select which real service to
-        # use
-        my $selector = $self->{'service'}->selector();
-        return $self->_simple_response(500, "No service selector configured.")
-            unless ref $selector eq "CODE";
-        $selector->($self);
-    };
-
+    # now that we have headers, it's time to tell the selector
+    # plugin that it's time for it to select which real service to
+    # use
     my $svc = $self->{'service'};
-    if ($svc->{latency}) {
-        Danga::Socket->AddTimer($svc->{latency} / 1000, $select);
+    my $selector = $svc->selector();
+
+    return $self->_simple_response(500, "No service selector configured.")
+        unless ref $selector eq "CODE";
+
+    unless ($svc->{latency}) {
+        $selector->($self);
     } else {
-        $select->();
+        my $select = sub {
+            $selector->($self);
+        };
+        Danga::Socket->AddTimer($svc->{latency} / 1000, $select);
     }
 }
 
