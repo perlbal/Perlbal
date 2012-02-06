@@ -264,18 +264,12 @@ sub backend_response_received {
     # a certain size and got back something different
     my $code = $be->{res_headers}->response_code + 0;
 
-    my $bad_code = sub {
-        return 0 if $code >= 200 && $code <= 299;
-        return 0 if $code == 416;
-        return 1;
-    };
+    my $bad_code = ($code < 200 || $code >= 300) && $code != 416;
 
-    my $bad_size = sub {
-        return 0 unless defined $self->{reproxy_expected_size};
-        return $self->{reproxy_expected_size} != $be->{res_headers}->header('Content-length');
-    };
+    my $bad_size = (defined $self->{reproxy_expected_size} &&
+                   $self->{reproxy_expected_size} != $be->{res_headers}->header('Content-length'));
 
-    if ($bad_code->() || $bad_size->()) {
+    if ($bad_code || $bad_size) {
         # fall back to an alternate URL
         $be->{client} = undef;
         $be->close('non_200_reproxy');
