@@ -1,9 +1,6 @@
     -- Allow vhost mappings to be deleted via the management port.
        (Jason Stubbs <jasonbstubbs@gmail.com>)
 
-    -- Decrease overall CPU usage by 20% when using the vhost plugin.
-       (Jason Stubbs <jasonbstubbs@gmail.com>)
-
     -- Return an error rather than silently continuing when a vhost maps to a
        service that doesn't exist. (Jason Stubbs <jasonbstubbs@gmail.com>)
 
