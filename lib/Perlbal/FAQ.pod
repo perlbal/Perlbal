@@ -79,7 +79,7 @@ When more of 1.1 is supported, it will become an option, and later become the de
 
 =head3 Does perlbal support SSL?
 
-Yes. To use SSL mode you'll need L<IO::Socket::SSL> C<v0.97+> installed.
+Yes. To use SSL mode you'll need L<IO::Socket::SSL> C<v0.98+> installed.
 
 You can do SSL either on C<web_server>, C<reverse_proxy> or C<selector> modes, but not on a vhost-based C<selector> service, because SSL and vhosts aren't compatible.
 

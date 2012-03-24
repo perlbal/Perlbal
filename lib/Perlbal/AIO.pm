@@ -46,7 +46,8 @@ sub aio_readahead {
 
     aio_channel_push(get_chan(), $user_cb, sub {
         my $cb = shift;
-        if ($Perlbal::AIO_MODE eq "ioaio") {
+        # $fh could end up closed.
+        if ($Perlbal::AIO_MODE eq "ioaio" && defined fileno($fh)) {
             IO::AIO::aio_readahead($fh, $offset, $length, $cb);
         } else {
             $cb->();
