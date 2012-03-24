@@ -42,7 +42,7 @@ my $has_cycle      = eval "use Devel::Cycle; 1;";
 my $has_devel_peek = eval "use Devel::Peek; 1;";
 
 use vars qw($VERSION);
-$VERSION = '1.79';
+$VERSION = '1.80';
 
 use constant DEBUG => $ENV{PERLBAL_DEBUG} || 0;
 use constant DEBUG_OBJ => $ENV{PERLBAL_DEBUG_OBJ} || 0;

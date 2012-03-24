@@ -11,6 +11,7 @@ my $class = 'Perlbal::Service';
 
 subtest 'module checking' => sub {
     isa_ok( $class->new(), $class, "can create object from $class" );
+    done_testing();
 };
 
 my @words = generate_words(1000);
@@ -18,6 +19,7 @@ my @words = generate_words(1000);
 subtest 'check sub integrity' => sub {
     is_deeply( test_optimized(), test_original(), "sub optimized" );
     is_deeply( test_hash(),      test_original(), "sub hash" );
+    done_testing();
 };
 
 SKIP: {
@@ -36,6 +38,7 @@ SKIP: {
                 'hash'      => \&test_hash,
             }
         );
+        done_testing();
     };
 
 }

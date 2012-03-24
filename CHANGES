@@ -14,6 +14,18 @@
     -- Do vhost twiddling after all host header cleanups in order to standardize
        with regular vhost configuration (Jason Stubbs <jasonbstubbs@gmail.com>)
 
+    -- Fix Test::More 0.94 (Which is our required version) testing problems.
+       (Jonathan Steinert <hachi@kuiki.net>)
+
+    -- Fix (loopback/localhost) connection failures on some BSD machines.
+       (Jonathan Steinert <hachi@kuiki.net>)
+
+1.80: 2012-02-26
+
+    -- FLV streaming plugin (Gosuke Miyashita <gosukenator@gmail.com>)
+
+    -- New Throttle plugin (Adam Thomason <thomason@reticulatedsplines.net>)
+
     -- Force keepalives off when we haven't finished reading a request body, but we
        are already sending a response. (Jonathan Steinert <hachi@kuiki.net>)
 

@@ -19,6 +19,7 @@ SKIP: {
         use_ok('Perlbal::CommandContext');
         eval { Perlbal::CommandContext->new(); };
         like( $@, qr{$warn_mocked}, "use old library" );
+        done_testing();
     };
 }
 
