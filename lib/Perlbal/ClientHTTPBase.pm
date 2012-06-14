@@ -14,6 +14,7 @@ package Perlbal::ClientHTTPBase;
 use strict;
 use warnings;
 no  warnings qw(deprecated);
+use Carp qw(confess);
 
 use Sys::Syscall;
 use base "Perlbal::Socket";
@@ -286,7 +287,7 @@ sub event_read {
     $self->{alive_time} = $Perlbal::tick_time;
 
     # see if we have headers?
-    die "Shouldn't get here!  This is an abstract base class, pretty much, except in the case of the 'selector' role."
+    confess "Shouldn't get here!  This is an abstract base class, pretty much, except in the case of the 'selector' role."
         if $self->{req_headers};
 
     my $hd = $self->read_request_headers;
