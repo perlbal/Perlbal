@@ -17,6 +17,9 @@ create service <name>              -- create a new service
 set [<service>] <param> = <value>  -- set a property on a service (see service-parameters.txt)
                                       service name is optional when service was just created.
 
+default param = value              -- set a default value for a service parameter, to be used
+                                      whenever you create a new service
+
 enable <service>                   -- enable a service (start listening)
 disable <service>                  -- disable a service (stops listening)
 

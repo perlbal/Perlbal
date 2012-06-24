@@ -21,9 +21,15 @@ print H <<HTML;
 <pre>SET &lt;service-name&gt; &lt;param&gt; = &lt;value&gt;
 SET &lt;param&gt; = &lt;value&gt;
 </pre>
-HTML
 
-print H "Note on types:  'bool' values can be set using one of 1, true, yes, on, 0, false, off, or no.  'size' values are in integer bytes, or an integer followed by 'b', 'k', or 'm' (case-insensitive) for bytes, KiB, or MiB.";
+<p>Note on types:  'bool' values can be set using one of 1, true, yes, on, 0, false, off, or no.
+'size' values are in integer bytes, or an integer followed by 'b', 'k', or 'm' (case-insensitive)
+for bytes, KiB, or MiB.</p>
+
+<p>Note that you can set defaults for all services you create by using the DEFAULT command:</p>
+
+<pre>DEFAULT &lt;param&gt; = &lt;value&gt;</pre>
+HTML
 
 foreach my $role ("*", "reverse_proxy", "web_server") {
     if ($role eq "*") {

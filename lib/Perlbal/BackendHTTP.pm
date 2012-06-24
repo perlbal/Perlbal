@@ -44,6 +44,7 @@ use fields ('client',  # Perlbal::ClientProxy connection, or undef
 use Socket qw(PF_INET IPPROTO_TCP SOCK_STREAM SOL_SOCKET SO_ERROR
               AF_UNIX PF_UNSPEC
               );
+use Errno qw(EINPROGRESS EWOULDBLOCK EAGAIN);
 use IO::Handle;
 
 use Perlbal::ClientProxy;
@@ -81,7 +82,11 @@ sub new {
     }
 
     IO::Handle::blocking($sock, 0);
-    connect $sock, Socket::sockaddr_in($port, $inet_aton);
+    my $errno = 0;
+    my $rv = connect $sock, Socket::sockaddr_in($port, $inet_aton);
+    unless ($rv) {
+	$errno = $!;
+    }
 
     $self = fields::new($self) unless ref $self;
     $self->SUPER::new($sock);
@@ -99,6 +104,10 @@ sub new {
     # mark another connection to this ip:port
     $NodeStats{$self->{ipport}}->{attempts}++;
     $NodeStats{$self->{ipport}}->{lastattempt} = $self->{create_time};
+
+    unless ($errno == EINPROGRESS || $errno == EWOULDBLOCK || $errno == EAGAIN || $errno == 0) {
+	return $self->event_err;
+    }
 
     # setup callback in case we get stuck in connecting land
     Perlbal::Socket::register_callback(15, sub {
@@ -528,12 +537,17 @@ sub handle_response { # : void
     # as well as setup our HTTP version appropriately
     $client->setup_keepalive($thd);
 
+    my $svc = ref $self->{service} eq 'Perlbal::Service' ? $self->{service} : $client->{service};
+    $svc->run_hook('modify_response_headers', $self, $client);
+
     print "  writing response headers to client\n" if Perlbal::DEBUG >= 3;
     $client->write($thd->to_string_ref);
 
     print("  content_length=", (defined $self->{content_length} ? $self->{content_length} : "(undef)"),
           "  remain=",         (defined $self->{content_length_remain} ? $self->{content_length_remain} : "(undef)"), "\n")
         if Perlbal::DEBUG >= 3;
+
+    $svc->run_hook('prepend_body', $self, $client);
 
     if (defined $self->{content_length} && ! $self->{content_length_remain}) {
         print "  done.  detaching.\n" if Perlbal::DEBUG >= 3;

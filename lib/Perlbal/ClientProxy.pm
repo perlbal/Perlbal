@@ -549,6 +549,14 @@ sub close {
     $self->SUPER::close($reason);
 }
 
+sub setup_keepalive {
+    my Perlbal::ClientProxy $self = $_[0];
+    my $not_done_reading = defined $self->{content_length_remain} && $self->{content_length_remain} > 0;
+
+    return $self->SUPER::setup_keepalive($_[1], $not_done_reading ? 0 : undef);
+}
+
+
 sub client_disconnected { # : void
     my Perlbal::ClientProxy $self = shift;
     print "ClientProxy::client_disconnected\n" if Perlbal::DEBUG >= 2;

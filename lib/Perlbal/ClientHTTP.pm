@@ -17,18 +17,21 @@ use Perlbal::Util;
 use fields ('put_in_progress', # 1 when we're currently waiting for an async job to return
             'put_fh',          # file handle to use for writing data
             'put_fh_filename', # filename of put_fh
+            'put_final_name',  # final pathname of put_fh
             'put_pos',         # file offset to write next data at
 
             'content_length',  # length of document being transferred
             'content_length_remain', # bytes remaining to be read
             'chunked_upload_state', # bool/obj:  if processing a chunked upload, Perlbal::ChunkedUploadState object, else undef
+            'md5_ctx',         # Digest::MD5 used to verify Content-MD5
             );
 
 use HTTP::Date ();
 use File::Path;
 
 use Errno qw( EPIPE );
-use POSIX qw( O_CREAT O_TRUNC O_WRONLY O_RDONLY ENOENT );
+use POSIX qw( O_CREAT O_TRUNC O_WRONLY O_RDONLY O_EXCL ENOENT EEXIST );
+use Digest::MD5;
 
 # class list of directories we know exist
 our (%VerifiedDirs);
@@ -61,6 +64,8 @@ sub init {
     $self->{put_fh} = undef;
     $self->{put_pos} = 0;
     $self->{chunked_upload_state} = undef;
+    $self->{md5_ctx} = undef;
+    $self->{put_final_name} = undef;
 }
 
 sub close {
@@ -71,6 +76,13 @@ sub close {
 
     $self->{put_fh} = undef;
     $self->SUPER::close(@_);
+}
+
+sub setup_keepalive {
+    my Perlbal::ClientHTTP $self = $_[0];
+    my $not_done_reading = defined $self->{content_length_remain} && $self->{content_length_remain} > 0;
+
+    return $self->SUPER::setup_keepalive($_[1], $not_done_reading ? 0 : undef);
 }
 
 sub event_read {
@@ -133,6 +145,8 @@ sub handle_put {
     my $hd = $self->{req_headers};
 
     return $self->send_response(403) unless $self->{service}->{enable_put};
+
+    $self->{md5_ctx} = $self->{service}->{enable_md5} && $hd->header('Content-MD5') ? Digest::MD5->new : undef;
 
     return if $self->handle_put_chunked;
 
@@ -376,10 +390,19 @@ sub validate_min_put_directory {
 sub start_put_open {
     my Perlbal::ClientHTTP $self = shift;
     my ($path, $file) = @_;
+    my ($fs_path, $open_flags);
 
     $self->{put_in_progress} = 1;
+    if ($self->{md5_ctx}) {
+        $fs_path = "$path/$file.$$." . int(rand(0xffffffff)) . '.tmp';
+        $self->{put_final_name} = "$path/$file";
+        $open_flags = O_CREAT | O_EXCL | O_WRONLY;
+    } else {
+        $fs_path = "$path/$file";
+        $open_flags = O_CREAT | O_TRUNC | O_WRONLY;
+    }
 
-    Perlbal::AIO::aio_open("$path/$file", O_CREAT | O_TRUNC | O_WRONLY, 0644, sub {
+    Perlbal::AIO::aio_open($fs_path, $open_flags, 0644, sub {
         # get the fd
         my $fh = shift;
 
@@ -394,6 +417,10 @@ sub start_put_open {
 
                 # should be created, call self recursively to try
                 return $self->start_put_open($path, $file);
+            } elsif ($! == EEXIST && $self->{put_final_name}) {
+                # temp name collision, bail hard because this should be near impossible already
+                Perlbal::log('crit', "Failure to open exclusively $fs_path as temp file in PUT");
+                return $self->_simple_response(500);
             } else {
                 return $self->system_error("Internal error", "error = $!, path = $path, file = $file");
             }
@@ -401,7 +428,7 @@ sub start_put_open {
 
         $self->{put_fh}          = $fh;
         $self->{put_pos}         = 0;
-        $self->{put_fh_filename} = "$path/$file";
+        $self->{put_fh_filename} = $fs_path;
 
         # We just opened the file, haven't read_ahead any bytes, are expecting 0 bytes for read and we're
         # not in chunked mode, so close the file immediately, we're done.
@@ -427,6 +454,8 @@ sub put_writeout {
 
     my $data = join("", map { $$_ } @{$self->{read_buf}});
     my $count = length $data;
+    my $md5_ctx = $self->{md5_ctx};
+    $md5_ctx->add($data) if $md5_ctx;
 
     # reset our input buffer
     $self->{read_buf}   = [];
@@ -462,6 +491,38 @@ sub put_writeout {
     });
 }
 
+sub put_check_md5 {
+    my Perlbal::ClientHTTP $self = shift;
+
+    my $actual = $self->{md5_ctx}->b64digest;
+    my $expect = $self->{req_headers}->header("Content-MD5");
+    $expect =~ s/=+\s*\z//;
+    if ($actual eq $expect) {
+        Perlbal::AIO::aio_rename($self->{put_fh_filename}, $self->{put_final_name}, sub {
+            my $err = shift;
+            $self->{put_fh_filename} = undef;
+            $self->{put_final_name} = undef;
+            if ($err == 0) {
+                return $self->send_response(201);
+            } else {
+                return $self->system_error("Error renaming file", "error in rename: $!");
+            }
+        });
+    } else {
+        Perlbal::AIO::aio_unlink($self->{put_fh_filename}, sub {
+            my $err = shift;
+            $self->{put_fh_filename} = undef;
+            $self->{put_final_name} = undef;
+            if ($err == 0) {
+                return $self->send_response(400,
+                    "Content-MD5 mismatch, expected: $expect actual: $actual");
+            } else {
+                return $self->system_error("Error unlinking file", "error in unlink: $!");
+            }
+        });
+    }
+}
+
 sub put_close {
     my Perlbal::ClientHTTP $self = shift;
     return if $self->{put_in_progress};
@@ -469,6 +530,8 @@ sub put_close {
 
     if (CORE::close($self->{put_fh})) {
         $self->{put_fh} = undef;
+
+        return $self->put_check_md5 if $self->{md5_ctx};
         return $self->send_response(200);
     } else {
         return $self->system_error("Error saving file", "error in close: $!");

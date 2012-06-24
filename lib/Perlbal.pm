@@ -39,10 +39,10 @@ BEGIN {
 
 my $has_gladiator  = eval "use Devel::Gladiator; 1;";
 my $has_cycle      = eval "use Devel::Cycle; 1;";
-use Devel::Peek;
+my $has_devel_peek = eval "use Devel::Peek; 1;";
 
 use vars qw($VERSION);
-$VERSION = '1.79';
+$VERSION = '1.80';
 
 use constant DEBUG => $ENV{PERLBAL_DEBUG} || 0;
 use constant DEBUG_OBJ => $ENV{PERLBAL_DEBUG_OBJ} || 0;
@@ -52,7 +52,6 @@ use strict;
 use warnings;
 no  warnings qw(deprecated);
 
-use Storable ();
 use IO::Socket;
 use IO::Handle;
 use IO::File;
@@ -125,6 +124,13 @@ eval "use Perlbal::XS::HTTPHeaders;"; # if we have it, load it
 if ($ENV{PERLBAL_XS_HEADERS} && $XSModules{headers}) {
     Perlbal::XS::HTTPHeaders::enable();
 }
+
+# unactivate field::new 
+if ($ENV{PERLBAL_REMOVE_FIELDS}) {
+	use Perlbal::Fields;
+	Perlbal::Fields->remove();
+}
+
 
 # setup a USR1 signal handler that tells us to dump some basic statistics
 # of how we're doing to the syslog
@@ -266,13 +272,14 @@ sub run_manage_command {
     $cmd =~ s/\s+$//;
     $cmd =~ s/\s+/ /g;
 
-    my $orig = $cmd; # save original case for some commands
-    $cmd =~ s/^([^=]+)/lc $1/e; # lowercase everything up to an =
-    return 1 unless $cmd =~ /^\S/;
-
     # expand variables
+    my $orig = $cmd; # save original case for some commands
+
     $cmd =~ s/\$\{(.+?)\}/_expand_config_var($1)/eg;
     $cmd =~ s/\$(\w+)/$ENV{$1}/g;
+
+    $cmd =~ s/^([^=]+)/lc $1/e; # lowercase everything up to an =
+    return 1 unless $cmd =~ /^\S/;
 
     $out ||= sub {};
     $ctx ||= Perlbal::CommandContext->new;
@@ -338,7 +345,7 @@ sub arena_ref_counts {
 my %last_gladiator;
 sub MANAGE_gladiator {
     my $mc = shift->no_opts;
-    unless ($has_gladiator) {
+    unless ($has_gladiator && $has_devel_peek) {
         $mc->end;
         return;
     }
@@ -1079,6 +1086,14 @@ sub MANAGE_pool {
     return $mc->ok;
 }
 
+sub MANAGE_default {
+    my $mc = shift->parse(qr/^default (\w+) ?= ?(.+)$/,
+                          "usage: DEFAULT <param> = <value>");
+
+    my ($key, $val) = $mc->args;
+    return Perlbal::Service::set_defaults($mc, $key => $val);
+}
+
 sub MANAGE_set {
     my $mc = shift->parse(qr/^set (?:(\w+)[\. ])?([\w\.]+) ?= ?(.+)$/,
                           "usage: SET [<service>] <param> = <value>");
@@ -1145,7 +1160,7 @@ sub MANAGE_load {
         my $file = $class . ".pm";
         $file =~ s!::!/!g;
 
-        my $rv = eval "use $class; 1;";
+        my $rv = eval "use $class; $class->can('load');";
 
         if ($rv) {
             $good_error = undef;
@@ -1156,7 +1171,7 @@ sub MANAGE_load {
         $good_error = $@ unless defined $good_error;
 
         # If the file existed perl will place an entry in %INC (though it will be undef due to compilation error)
-        if (exists $INC{$file}) {
+        if ($@ and exists $INC{$file}) {
             $good_error = $@;
             last;
         }

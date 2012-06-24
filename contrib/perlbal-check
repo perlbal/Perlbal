@@ -29,10 +29,11 @@ You can use and redistribute Perlbal under the same terms as Perl itself.
 
 use strict;
 use warnings;
-use IO::Socket;
+use IO::Socket::INET;
 use Getopt::Long;
 use Data::Dumper qw(Dumper);
 use YAML qw(LoadFile);
+use List::Util qw(max);
 
 $| = 1;
 
@@ -366,8 +367,8 @@ sub watch_queues {
                             $services{$1}->{$3}->{$2};
                     # Keep tabs on the longest service name.
                     $maxlen = length($1) if (length($1) > $maxlen);
-                    if ($3 eq 'age' && $4 > $services{$1}->{$3}->{$2}) {
-                        $services{$1}->{$3}->{$2} = $4;
+                    if ($3 eq 'age') {
+                        $services{$1}->{$3}->{$2} = max($services{$1}->{$3}->{$2}, $4);
                     } else {
                         $services{$1}->{$3}->{$2} += $4;
                     }

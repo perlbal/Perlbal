@@ -1,3 +1,51 @@
+    -- Fix Test::More 0.94 (Which is our required version) testing problems.
+       (Jonathan Steinert <hachi@kuiki.net>)
+
+    -- Fix (loopback/localhost) connection failures on some BSD machines.
+       (Jonathan Steinert <hachi@kuiki.net>)
+
+1.80: 2012-02-26
+
+    -- FLV streaming plugin (Gosuke Miyashita <gosukenator@gmail.com>)
+
+    -- New Throttle plugin (Adam Thomason <thomason@reticulatedsplines.net>)
+
+    -- Force keepalives off when we haven't finished reading a request body, but we
+       are already sending a response. (Jonathan Steinert <hachi@kuiki.net>)
+
+    -- Add support for Content-MD5 checking on PUT requests to web server services.
+       (Eric Wong <normalperson@yhbt.net>)
+
+    -- Include an XFFExtras plugin that can add X-Forwarded-Port and X-Forwarded-Proto
+       headers to help proxy backends construct canonical URLs with less configuration.
+       (RT 60260) (Jonathan Steinert <hachi@kuiki.net>)
+
+    -- Fix perlbal-check's age calculation to get the maximum age of queues across all
+       Perlbals. (Abe Hassan <ahassan@saymedia.com>)
+
+    -- Add DEFAULT command to allow setting default values for later service tunables
+       (Mark Smith <mark@qq.is>)
+
+    -- Change IO::Socket::SSL version requirement error to reflect what we actually
+       require. (Jonathan Steinert <hachi@kuiki.net>)
+
+    -- Completely redo the deps list for perlbal. This addresses an issue exposed when
+       LWP was split into component modules (RT 68490) , plus other subtle issues we've
+       been ignoring or unaware of. (Jonathan Steinert <hachi@kuiki.net>)
+
+    -- Stop loading Storable, we don't use it (Jonathan Steinert <hachi@kuiki.net>)
+
+    -- Switch Devel::Peek to an optional requirement (Jonathan Steinert <hachi@kuiki.net>)
+
+    -- Change perlbal-check to use IO::Socket::INET, not just IO::Socket
+       (Jonathan Steinert <hachi@kuiki.net>)
+
+    -- Can use PERLBAL_REMOVE_FIELDS=1 to disable fields and improve performance
+       (Nicolas Rochelemagne <nicolas.rochelemagne@cpanel.net>)
+
+    -- Optimize handling of SET for bool values
+       (Nicolas Rochelemagne <nicolas.rochelemagne@cpanel.net>)
+
 1.79: 2011-06-15
 
     -- Make SSL sockets time out if they go stale, like we claimed was

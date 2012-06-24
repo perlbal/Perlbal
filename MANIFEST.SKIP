@@ -48,3 +48,10 @@ _blib$
 \.old$
 \#$
 \b\.#
+cover_db
+pm_to_blib
+.*\.bak
+^MYMETA.yml$
+\.project
+^Perlbal-.*
+^MYMETA\.json$

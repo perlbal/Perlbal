@@ -317,7 +317,6 @@ Return a new instance of LWP::UserAgent.
 =cut
 
 sub ua {
-    require LWP;
     require LWP::UserAgent;
     return LWP::UserAgent->new;
 }

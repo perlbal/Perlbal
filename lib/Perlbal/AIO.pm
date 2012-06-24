@@ -26,12 +26,28 @@ $Perlbal::AIO_MODE = "ioaio" if $Perlbal::OPTMOD_IO_AIO;
 # AIO functions available to callers
 ############################################################################
 
+sub aio_rename {
+    my ($srcpath, $dstpath, $user_cb) = @_;
+    aio_channel_push(get_chan($srcpath), $user_cb, sub {
+        my $cb = shift;
+
+        if ($Perlbal::AIO_MODE eq "ioaio") {
+            IO::AIO::aio_rename($srcpath, $dstpath, $cb);
+        } else {
+            my $rv = rename($srcpath, $dstpath);
+            $rv = $rv ? 0 : -1;
+            $cb->($rv);
+        }
+    });
+}
+
 sub aio_readahead {
     my ($fh, $offset, $length, $user_cb) = @_;
 
     aio_channel_push(get_chan(), $user_cb, sub {
         my $cb = shift;
-        if ($Perlbal::AIO_MODE eq "ioaio") {
+        # $fh could end up closed.
+        if ($Perlbal::AIO_MODE eq "ioaio" && defined fileno($fh)) {
             IO::AIO::aio_readahead($fh, $offset, $length, $cb);
         } else {
             $cb->();

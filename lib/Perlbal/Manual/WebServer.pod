@@ -73,6 +73,13 @@ Decreases overall round-trip latency a bunch, but requires app to be modified to
 Default is false.
 
 
+=item B<enable_md5> = bool
+
+Enable verification of the Content-MD5 header in HTTP PUT requests.
+
+Default is true.
+
+
 =item B<enable_delete> = bool
 
 Enable HTTP DELETE requests.

@@ -6,6 +6,7 @@ use warnings;
 use Perlbal::Test;
 
 use Test::More 'no_plan';
+use Digest::MD5 qw/md5_base64/;
 
 my $port = new_port();
 my $dir = tempdir();
@@ -65,6 +66,11 @@ sub verify_put {
     ok(filecontent($disk_file) eq $content, "verified put");
 }
 
+sub content_md5 {
+    # Digest::MD5 doesn't pad base64 digests, so we have to do it ourselves
+    [ "Content-MD5", md5_base64($_[0]) . '==' ]
+}
+
 # successful puts
 foreach_aio {
     my $aio = shift;
@@ -120,5 +126,25 @@ ok(manage("SET test.enable_put = 0"));
 ok(! put_file(), "put disabled");
 ok(manage("SET test.enable_delete = 0"));
 ok(! delete_file(), "delete disabled");
+ok(manage("SET test.enable_put = 1"));
+ok(manage("SET test.enable_md5 = 1"));
+ok(put_file(), "put re-enabled");
+
+# Content-MD5 checking
+ok(put_file(content => "!", headers => content_md5('!')), "Content-MD5 OK");
+verify_put();
+ok(! put_file(content => "?", headers => content_md5('!')), "Content-MD5 rejected");
+ok(filecontent($disk_file) ne $content, "verified put failure");
+{
+    my @list = (<$disk_file*>);
+    ok(scalar(@list) == 1 && $list[0] eq $disk_file, "no temporary file leftover");
+}
+
+$content = "!";
+verify_put();
+
+ok(manage("SET test.enable_md5 = 0"), "disable MD5 verification");
+ok(put_file(content => "?", headers => content_md5('!')), "Content-MD5 NOT rejected");
+verify_put();
 
 1;

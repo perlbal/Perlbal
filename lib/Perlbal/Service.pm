@@ -14,7 +14,6 @@ no  warnings qw(deprecated);
 use Perlbal::BackendHTTP;
 use Perlbal::Cache;
 use Perlbal::Util;
-
 use fields (
             'name',            # scalar: name of this service
             'role',            # scalar: role type 'web_server', 'reverse_proxy', etc...
@@ -31,6 +30,7 @@ use fields (
             'index_files',        # arrayref of filenames to try for index files
             'enable_concatenate_get',   # bool:  if user can request concatenated files
             'enable_put', # bool: whether PUT is supported
+            'enable_md5', # bool: whether Content-MD5 is supported on PUT
             'max_put_size', # int: max size in bytes of a put file
             'max_chunked_request_size',  # int: max size in bytes of a chunked request (to be written to disk first)
             'min_put_directory', # int: number of directories required to exist at beginning of URIs in put
@@ -110,6 +110,9 @@ use fields (
 
 # hash; 'role' => coderef to instantiate a client for this role
 our %PluginRoles;
+
+# used by set_defaults
+our $defaults = {};
 
 our $tunables = {
 
@@ -263,6 +266,13 @@ our $tunables = {
     'enable_put' => {
         des => "Enable HTTP PUT requests.",
         default => 0,
+        check_role => "web_server",
+        check_type => "bool",
+    },
+
+    'enable_md5' => {
+        des => "Enable verification of the Content-MD5 header in HTTP PUT requests",
+        default => 1,
         check_role => "web_server",
         check_type => "bool",
     },
@@ -642,6 +652,7 @@ sub new {
 
     my ($name) = @_;
 
+    $name ||= '';
     $self->{name} = $name;
     $self->{enabled} = 0;
     $self->{extra_config} = {};
@@ -790,9 +801,22 @@ sub init {
     for my $param (keys %$tunables) {
         my $tun     = $tunables->{$param};
         next unless $tun->{check_role} eq "*" || $tun->{check_role} eq $self->{role};
-        next unless exists $tun->{default};
-        $self->set($param, $tun->{default});
+
+        if (exists $defaults->{$param}) {
+            $self->set($param, $defaults->{$param});
+        } elsif (exists $tun->{default}) {
+            $self->set($param, $tun->{default});
+        }
     }
+}
+
+# Service default setter
+sub set_defaults {
+    my ($mc, %args) = @_;
+    foreach my $key (keys %args) {
+        $defaults->{$key} = $args{$key};
+    }
+    return $mc->ok;
 }
 
 # Service
@@ -834,13 +858,6 @@ sub set {
         if $key eq 'nodefile' ||
            $key eq 'balance_method';
 
-    my $bool = sub {
-        my $val = shift;
-        return 1 if $val =~ /^1|true|on|yes$/i;
-        return 0 if $val =~ /^0|false|off|no$/i;
-        return undef;
-    };
-
     if (my $tun = $tunables->{$key}) {
         if (my $req_role = $tun->{check_role}) {
             return $mc->err("The '$key' option can only be set on a '$req_role' service")
@@ -859,7 +876,7 @@ sub set {
                 my $emsg  = "";
                 return $mc->err($emsg) unless $req_type->($self, $val, \$emsg);
             } elsif ($req_type eq "bool") {
-                $val = $bool->($val);
+                $val = _bool($val);
                 return $mc->err("Expecting boolean value for parameter '$key'")
                     unless defined $val;
             } elsif ($req_type eq "int") {
@@ -947,6 +964,27 @@ sub set {
     }
 
     return $mc->err("Unknown service parameter '$key'");
+}
+
+{
+    # should use sate, but could be a problem for old perl version
+    # benchmark test, says that this function is x5 times faster than the previous one
+    my %h_on = map { $_, 1 } qw/1 true on yes/;
+    my %h_off = map { $_, 1 } qw/0 false off no/;
+
+    # create one static method to check boolean value, rather than generating each time a dynamic method 
+    # use static list rather than regexp to speedup the reading process
+    sub _bool {
+        my $val = shift;
+
+        return unless defined $val;
+
+        $val = lc($val);
+        return 1 if defined $h_on{$val};
+        return 0 if defined $h_off{$val};
+
+        return undef;
+    }
 }
 
 # CLASS METHOD -
@@ -1606,7 +1644,7 @@ sub enable {
                 (defined $self->{ssl_ca_path} ? (SSL_ca_path => $self->{ssl_ca_path}) : ()),
                 (defined $self->{ssl_verify_mode} ? (SSL_verify_mode => $self->{ssl_verify_mode}) : ()),
             };
-            return $mc->err("IO::Socket:SSL (0.97+) not available.  Can't do SSL.") unless eval "use IO::Socket::SSL 0.97 (); 1;";
+            return $mc->err("IO::Socket:SSL (0.98+) not available.  Can't do SSL.") unless eval "use IO::Socket::SSL 0.98 (); 1;";
             return $mc->err("SSL key file ($self->{ssl_key_file}) doesn't exist")   unless -f $self->{ssl_key_file};
             return $mc->err("SSL cert file ($self->{ssl_cert_file}) doesn't exist") unless -f $self->{ssl_cert_file};
         }

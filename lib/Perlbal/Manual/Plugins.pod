@@ -1,6 +1,6 @@
 =head1 NAME
 
-Perlbal::Manual - Creating and using plugins
+Perlbal::Manual::Plugins - Creating and using plugins
 
 
 =head2 VERSION
@@ -260,7 +260,7 @@ The value needs to be defined and the content must be an existing directory (val
 
 An array reference containing the acceptable values:
 
-    check_type => ["yellow", "blue", "green"],
+    check_type => [enum => ["yellow", "blue", "green"]],
 
 
 =item file
@@ -436,6 +436,11 @@ Simple plugin demonstrating how to create an add-on service for Perlbal using th
 Add a custom header according to the SSL of a service.
 
 
+=item * L<Perlbal::Plugin::FlvStreaming> (Perlbal core)
+
+Enable FLV streaming with reverse proxy.
+
+
 =item * L<Perlbal::Plugin::ForwardedFor>
 
 Rename the X-Forwarded-For header in Perlbal.
@@ -496,6 +501,11 @@ Basic Perlbal statistics gatherer.
 Session affinity for Perlbal.
 
 
+=item * L<Perlbal::Plugin::Throttle> (Perlbal core)
+
+Throttle connections from hosts that connect too frequently.
+
+
 =item * L<Perlbal::Plugin::TrustHeader>
 
 Remove untrusted headers.
@@ -514,6 +524,12 @@ Name-based virtual hosts.
 =item * L<Perlbal::Plugin::Vpaths> (Perlbal core)
 
 Select by path (selector role only).
+
+
+=item * L<Perlbal::Plugin::XFFExtras> (Perlbal core)
+
+Perlbal plugin that can optionally add an X-Forwarded-Port and/or
+X-Forwarded-Proto header to reverse proxied requests.
 
 
 =back

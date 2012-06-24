@@ -247,6 +247,10 @@ sub serve_client {
                 }
                 $to_send = $response->(content => "pid = $$\nsubpid = $subpid\nreqnum = $req_num\n");
             }
+
+            if ($cmd =~ /^reflect_request_headers$/) {
+                $to_send = $response->(content => $msg->headers->as_string);
+            }
         }
 
         $send->($to_send || $response->());
