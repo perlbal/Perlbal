@@ -97,6 +97,7 @@ use fields (
             'ssl_cipher_list',    # OpenSSL cipher list string
             'ssl_ca_path',        # directory:  path to certificates
             'ssl_verify_mode',    # int:  verification mode, see IO::Socket::SSL documentation 
+            'ssl_honor_cipher_order', # bool: see IO::Socket::SSL documentation (requires version >= 1.71)
 
             'enable_error_retries',  # bool: whether we should retry requests after errors
             'error_retry_schedule',  # string of comma-separated seconds (full or partial) to delay between retries
@@ -611,6 +612,12 @@ our $tunables = {
 
     'ssl_verify_mode' => {
         des => 'SSL verification mode',
+        default => 0,
+        check_type => "int",
+        check_role => "*",
+    },
+    'ssl_honor_cipher_order' => {
+        des => 'SSL: server determines cipher order to try',
         default => 0,
         check_type => "int",
         check_role => "*",
@@ -1643,6 +1650,7 @@ sub enable {
                 SSL_cipher_list => $self->{ssl_cipher_list},
                 (defined $self->{ssl_ca_path} ? (SSL_ca_path => $self->{ssl_ca_path}) : ()),
                 (defined $self->{ssl_verify_mode} ? (SSL_verify_mode => $self->{ssl_verify_mode}) : ()),
+                (defined $self->{ssl_honor_cipher_order} ? (SSL_honor_cipher_order => $self->{ssl_honor_cipher_order}) : ()),
             };
             return $mc->err("IO::Socket:SSL (0.98+) not available.  Can't do SSL.") unless eval "use IO::Socket::SSL 0.98 (); 1;";
             return $mc->err("SSL key file ($self->{ssl_key_file}) doesn't exist")   unless -f $self->{ssl_key_file};
