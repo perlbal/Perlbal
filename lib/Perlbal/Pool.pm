@@ -32,6 +32,7 @@ use fields (
             'nodefile.lastmod',   # unix time nodefile was last modified
             'nodefile.lastcheck', # unix time nodefile was last stated
             'nodefile.checking',  # boolean; if true AIO is stating the file for us
+            'waiting_services',   # a hash of services waiting for this pool
             );
 
 sub new {
@@ -49,6 +50,7 @@ sub new {
 
     $self->{nodefile} = undef;
     $self->{balance_method} = BM_RANDOM;
+	$self->{waiting_services} = {};
 
     return $self;
 }
@@ -214,6 +216,18 @@ sub add {
     $self->{node_used}->{"$ip:$port"} = 0;
     push @{$self->{nodes}}, [ $ip, $port ];
     $self->{node_count} = scalar(@{$self->{nodes}});
+
+	if ($self->{waiting_services}) {
+		foreach my $service (values %{$self->{waiting_services}}) {
+			next unless $service;
+			delete $self->{waiting_services}->{$service->{name}};
+			if ($service->{waiting_client_count} >0) {
+				Perlbal::log('info', "Pool $self->{name} was added much needed node. Now has " . $self->node_count . " nodes");
+				$service->spawn_backends;
+				last; # We only have enough for one.
+			}
+		}
+	}
 }
 
 sub remove {
