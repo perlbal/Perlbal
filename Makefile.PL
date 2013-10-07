@@ -100,6 +100,12 @@ WriteMakefile(
       (),
     ),
 
+    META_MERGE => {
+        resources => {
+            repository => 'https://github.com/perlbal/Perlbal',
+        },
+    },
+
 );
 
 sub MY::postamble {
