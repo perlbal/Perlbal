@@ -1652,7 +1652,7 @@ sub enable {
                 (defined $self->{ssl_verify_mode} ? (SSL_verify_mode => $self->{ssl_verify_mode}) : ()),
                 (defined $self->{ssl_honor_cipher_order} ? (SSL_honor_cipher_order => $self->{ssl_honor_cipher_order}) : ()),
             };
-            return $mc->err("IO::Socket:SSL (0.98+) not available.  Can't do SSL.") unless eval "use IO::Socket::SSL 0.98 (); 1;";
+            return $mc->err("IO::Socket::SSL (0.98+) not available.  Can't do SSL.") unless eval "use IO::Socket::SSL 0.98 (); 1;";
             return $mc->err("SSL key file ($self->{ssl_key_file}) doesn't exist")   unless -f $self->{ssl_key_file};
             return $mc->err("SSL cert file ($self->{ssl_cert_file}) doesn't exist") unless -f $self->{ssl_cert_file};
         }
