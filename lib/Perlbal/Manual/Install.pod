@@ -108,7 +108,7 @@ If you don't have L<IO::AIO> installed a warning message will be displayed when 
               Install IO::AIO for better performance.
 
 
-=head2 Checking that Perlbal is succesfully installed
+=head2 Checking that Perlbal is successfully installed
 
 Perlbal is shipped with some sample configuration files that reside in the F<conf> directory (of the source).
 
@@ -146,7 +146,7 @@ Alternately, see the following Troubleshooting item: C<No connection to the inte
 
 =head3 No connection to the internet
 
-If you don't have a connection to the internet you can still install Perlbal, but you'll have to tranfer the source somehow to the machine.
+If you don't have a connection to the internet you can still install Perlbal, but you'll have to transfer the source somehow to the machine.
 
 Given that Perlbal has other module dependencies from CPAN (and those have their own dependencies too), here's a solution for this problem:
 
