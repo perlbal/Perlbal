@@ -673,7 +673,7 @@ connections from IP addresses which are determined to be connecting too fast.
 
 =head1 BEHAVIOR
 
-An IP address address may be in one of four states depending on its recent
+An IP address may be in one of four states depending on its recent
 activity; that state determines how new requests from the IP are handled:
 
 =over 4

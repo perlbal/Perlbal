@@ -24,7 +24,7 @@ The comprehensive documentation on this process can be found at L<Perlbal::Manua
 
 =head2 Debugging messages
 
-You can control the ammount of debugging messages Perlbal dumps by setting the environment variable C<PERLBAL_DEBUG> to a value between 0 and 4:
+You can control the amount of debugging messages Perlbal dumps by setting the environment variable C<PERLBAL_DEBUG> to a value between 0 and 4:
 
     PERLBAL_DEBUG = 0 # no debug
 
@@ -112,7 +112,7 @@ By setting the debug level to 3 you'll get all the messages from level 1 and 2 p
 
 =item * While determining if we should be sending keep-alive header information back to the client, if we were sent C<content-length> or it's a head request, as we're doing a keep alive L<Perlbal::ClientHTTPBase> prints C<  doing keep-alive to client>
 
-=item * If we're not sending keep-alive header information back ot the client, L<Perlbal::ClientHTTPBase> prints C<  doing connection: close>
+=item * If we're not sending keep-alive header information back to the client, L<Perlbal::ClientHTTPBase> prints C<  doing connection: close>
 
 =item * Right after we've finished sending all of the results to the user, L<Perlbal::ClientProxy> prints C<ClientProxy::backend_finished>
 

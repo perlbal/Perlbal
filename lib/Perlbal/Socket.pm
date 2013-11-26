@@ -34,7 +34,7 @@ use fields (
             'ditch_leading_rn', # if true, the next header parsing will ignore a leading \r\n
 
             'observed_ip_string', # if defined, contains the observed IP string of the peer
-                                  # we're serving. this is intended for hoding the value of
+                                  # we're serving. this is intended for holding the value of
                                   # the X-Forwarded-For and using it to govern ACLs.
             );
 
