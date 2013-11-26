@@ -1442,6 +1442,14 @@ sub spawn_backends {
 
     # can't create more than this, assuming one pending connect per node
     my $max_creatable = $pool ? ($self->{pool}->node_count - $self->{pending_connect_count}) : 1;
+
+	# If we cannot create any backends, register this service as waiting for nodes
+	if ($pool and $max_creatable <= 0 and $to_create > 0) {
+		$pool->{waiting_services}->{$self->{name}} = $self;
+	} else {
+		delete $pool->{waiting_services}->{$self->{name}};
+	}
+
     $to_create = $max_creatable if $to_create > $max_creatable;
 
     # cap number of attempted connects at once
