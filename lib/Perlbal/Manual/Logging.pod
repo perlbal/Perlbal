@@ -66,7 +66,7 @@ And here's another example:
     Perlbal::log('warning', "system error: $msg ($info)");
 
 
-=item * If we receive a request with a content lenght different from the actual length of the request, L<Perlbal::ClientProxy> logs a critical message:
+=item * If we receive a request with a content length different from the actual length of the request, L<Perlbal::ClientProxy> logs a critical message:
 
     Perlbal::log('crit', "Content length of $clen declared but $self->{buoutpos} bytes written to disk");
 
@@ -93,7 +93,7 @@ And here's another example:
     Perlbal::log('warning', "          -- [$filename:$line] $package::$subroutine");
 
 
-=item * When deciding whether we should spawn one or more backend connections, if the total of pending conections is negative, L<Perlbal::Service> will log a critical message:
+=item * When deciding whether we should spawn one or more backend connections, if the total of pending connections is negative, L<Perlbal::Service> will log a critical message:
 
     Perlbal::log('crit', "Bogus: service $self->{name} has pending connect count of $self->{pending_connect_count}?!  Resetting.");
 
