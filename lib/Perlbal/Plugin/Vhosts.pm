@@ -131,7 +131,15 @@ sub vhost_selector {
         my ($match_on, $force) = @_;
 
         my $map_name = $maps->{$match_on};
-        my $svc = $map_name ? Perlbal->service($map_name) : undef;
+        my $svc;
+        if ($map_name) {
+            $svc = Perlbal->service($map_name);
+            if (!$svc) {
+                Perlbal::log("warning", "The service name '$map_name' does not exist (configured for the vhost match '$match_on')");
+                $cb->_simple_response(404, "Not Found (no configured vhost)");
+                return 1;
+            }
+        }
 
         return 0 unless $svc || $force;
 

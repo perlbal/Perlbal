@@ -104,6 +104,7 @@ t/45-buffereduploads.t
 t/50-plugins.t
 t/52-chunked-upload.t
 t/60-child-httpd.t
+t/74-plugin-vhosts.t
 t/75-plugin-include.t
 t/76-plugin-redirect.t
 t/77-plugin-throttle.t
