@@ -39,12 +39,14 @@ my $opt_daemonize;
 my $opt_config;
 my $opt_help;
 my $opt_version;
+my $opt_drop_privs = [];
 usage(1) unless
     Getopt::Long::GetOptions(
                              'daemon'   => \$opt_daemonize,
                              'config=s' => \$opt_config,
                              'help'     => \$opt_help,
                              'version'  => \$opt_version,
+                             'drop-privs=s' => $opt_drop_privs,
                );
 
 my $default_config = "/etc/perlbal/perlbal.conf";
@@ -61,6 +63,8 @@ Usage: perlbal [OPTS]
   --config=[file]  Specify Perlbal config file
                    (default: /etc/perlbal/perlbal.conf)
   --daemon         Daemonize
+  --drop-privs=<uid|user>[,gid|group]   Drop effective privileges.
+                                        (gid is optional)
 USAGE
 
     exit($rv);
@@ -69,6 +73,12 @@ USAGE
 if ($opt_version) {
     print STDOUT "Perlbal version $Perlbal::VERSION\n";
     exit 0;
+}
+
+if ( @$opt_drop_privs && $< != 0 ) {
+    # real uid isn't root
+    print STDERR "Can't drop privileges if not run with root privileges first!\n\n";
+    usage(1);
 }
 
 # load user config
@@ -94,8 +104,35 @@ if ($opt_daemonize) {
     print "Running.\n";
 }
 
+if ( @$opt_drop_privs ) {
+    my ( $uid, $gid ) = split( ',', join( ',', @$opt_drop_privs ) );
+    # not a number, resolve by user name
+    if ( $uid !~ m/^\d+$/ ) {
+        my $u = getpwnam( $uid );
+        die "unknown user: $uid! You could try using the uid instead"
+            unless( defined( $u ) );
+        $uid = $u;
+    }
+    # not a number, resolve by group name
+    if ( defined( $gid ) && $gid !~ m/^\d+$/ ) {
+        my $g = getgrnam( $gid );
+        die "unknown group: $gid! You could try using the gid instead"
+            unless( defined( $g ) );
+        $gid = $g;
+    }
+    
+    # drop the group first, then the user
+    set_egid( $gid ) if defined( $gid );
+    set_euid( $uid ) if ( $uid );
+    print "Dropped privileges to $uid".( defined( $gid ) ? ":$gid" : '' )."\n";
+}
+
 exit 0 if Perlbal::run();
 exit 1;
+
+# util functions to 
+sub set_euid { $> = $_[ 0 ]; die "could not set the effective uid: $_[ 0 ]" unless( $_[ 0 ] == $> ); }
+sub set_egid { $) = $_[ 0 ]; die "could not set the effective gid: $_[ 0 ]" unless( $_[ 0 ] == $) ); }
 
 # Local Variables:
 # mode: perl
