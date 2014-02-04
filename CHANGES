@@ -1,3 +1,19 @@
+    -- Allow vhost mappings to be deleted via the management port.
+       (Jason Stubbs <jasonbstubbs@gmail.com>)
+
+    -- Return an error rather than silently continuing when a vhost maps to a
+       service that doesn't exist. (Jason Stubbs <jasonbstubbs@gmail.com>)
+
+    -- Don't check for a vhost twiddle request_uri if twiddling hasn't been
+       configured, so that /__using/... uris aren't needlessly appropriated.
+       (Jason Stubbs <jasonbstubbs@gmail.com>)
+
+    -- Fix handling of a www.exammple.com.:80 type host header in the vhost
+       plugin (Jason Stubbs <jasonbstubbs@gmail.com>)
+
+    -- Do vhost twiddling after all host header cleanups in order to standardize
+       with regular vhost configuration (Jason Stubbs <jasonbstubbs@gmail.com>)
+
     -- Fix Test::More 0.94 (Which is our required version) testing problems.
        (Jonathan Steinert <hachi@kuiki.net>)
 
