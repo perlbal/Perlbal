@@ -295,6 +295,10 @@ sub register {
     my %banned;
     my $store = Perlbal::Plugin::Throttle::Store->new($cfg);
 
+    $stash->{throttled} = \%throttled;
+    $stash->{banned} = \%banned;
+    $stash->{store} = $store;
+
     my $start_handler = sub {
         my $retval = eval {
             my $request_start = Time::HiRes::time;
@@ -530,6 +534,27 @@ sub load_cidr_list {
     die "$file contains no recognizable CIDRs\n" if $empty;
 
     return $list;
+}
+
+sub dumpconfig {
+    my ($class, $svc) = @_;
+
+    my $cfg = $svc->{extra_config} ||= {};
+    my $stash = $cfg->{_throttle_stash};
+
+    (my $storage = $stash->{store} ? ref $stash->{store} : 'none') =~ s/.*://;
+    my @whitelisted = $stash->{whitelist} ? $stash->{whitelist}->list() : 'none';
+    my @blacklisted = $stash->{blacklist} ? $stash->{blacklist}->list() : 'none';
+    my @throttled = keys %{ $stash->{throttled} } ? sort keys %{ $stash->{throttled} } : 'none';
+    my @banned = keys %{ $stash->{banned} } ? sort keys %{ $stash->{banned} } : 'none';
+
+    return
+        '# -- Throttler state --',
+        '# Storage: ' . $storage,
+        '# Whitelisted: ' . join(', ', @whitelisted),
+        '# Blacklisted: ' . join(', ', @blacklisted),
+        '# Throttled: '   . join(', ', @throttled),
+        '# Banned: '      . join(', ', @banned),
 }
 
 package Perlbal::Plugin::Throttle::Store;
