@@ -94,6 +94,7 @@ use fields (
             'enable_ssl',         # bool: whether this service speaks SSL to the client
             'ssl_key_file',       # file:  path to key pem file
             'ssl_cert_file',      # file:  path to key pem file
+            'ssl_sni_dir',        # directory: path to certificate PEM directory (used for SNI)
             'ssl_cipher_list',    # OpenSSL cipher list string
             'ssl_ca_path',        # directory:  path to certificates
             'ssl_verify_mode',    # int:  verification mode, see IO::Socket::SSL documentation 
@@ -594,6 +595,13 @@ our $tunables = {
         des => "Path to certificate PEM file for SSL.",
         default => "certs/server-cert.pem",
         check_type => "file_or_none",
+        check_role => "*",
+    },
+
+    'ssl_sni_dir' => {
+        des        => "Path to the PEM certificate and key files directory SSL SNI.",
+        default    => undef,
+        check_type => "directory_or_none",
         check_role => "*",
     },
 
@@ -1653,8 +1661,39 @@ sub enable {
                 (defined $self->{ssl_honor_cipher_order} ? (SSL_honor_cipher_order => $self->{ssl_honor_cipher_order}) : ()),
             };
             return $mc->err("IO::Socket:SSL (0.98+) not available.  Can't do SSL.") unless eval "use IO::Socket::SSL 0.98 (); 1;";
-            return $mc->err("SSL key file ($self->{ssl_key_file}) doesn't exist")   unless -f $self->{ssl_key_file};
-            return $mc->err("SSL cert file ($self->{ssl_cert_file}) doesn't exist") unless -f $self->{ssl_cert_file};
+
+            if ( ! $self->{'ssl_sni_dir'} ) {
+                return $mc->err("SSL key file ($self->{ssl_key_file}) doesn't exist")   unless -f $self->{ssl_key_file};
+                return $mc->err("SSL cert file ($self->{ssl_cert_file}) doesn't exist") unless -f $self->{ssl_cert_file};
+            } else {
+                IO::Socket::SSL->can_server_sni
+                    or return $mc->err("SSL SNI not supported");
+
+                require IO::Socket::SSL::Utils;
+                my $dir = $self->{'ssl_sni_dir'};
+                opendir my $dh, $dir
+                    or die "Could not open SSL SNI directory: $!\n";
+
+                my @files = grep -f File::Spec->catfile( $dir, $_ ), readdir $dh;
+
+                closedir $dh
+                    or die "Could not close SSL SNI directory: $!\n";
+
+                $opts->{'ssl'}{'SSL_cert_file'} = {};
+                $opts->{'ssl'}{'SSL_key_file'}  = {};
+
+                foreach my $file (@files) {
+                    my $path = File::Spec->catfile( $dir, $file );
+                    my $cert = IO::Socket::SSL::Utils::PEM_file2cert($path);
+                    my $data = IO::Socket::SSL::Utils::CERT_asHash($cert);
+                    IO::Socket::SSL::Utils::CERT_free($cert);
+
+                    $opts->{'ssl'}{'SSL_cert_file'}{$_} =
+                    $opts->{'ssl'}{'SSL_key_file'}{$_}  =
+                    $path for $data->{'subject'}{'commonName'},
+                              map $_->[1], @{ $data->{'subjectAltNames'} };
+                }
+            }
         }
 
         my $tl = Perlbal::TCPListener->new($self->{listen}, $self, $opts);
