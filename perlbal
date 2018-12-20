@@ -32,7 +32,6 @@ You can use and redistribute Perlbal under the same terms as Perl itself.
 
 use strict;
 use warnings;
-use lib 'lib';
 use Perlbal;
 
 my $opt_daemonize;

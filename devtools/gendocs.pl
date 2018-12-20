@@ -3,7 +3,6 @@
 
 use strict;
 use FindBin;
-use lib "$FindBin::Bin/../lib";
 use Perlbal;
 
 my $tunables = Perlbal::Service::autodoc_get_tunables();
