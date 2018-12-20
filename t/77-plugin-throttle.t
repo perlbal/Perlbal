@@ -1,8 +1,6 @@
 use strict;
 use warnings;
 
-use lib 't/lib';
-
 use IO::Select;
 use Perlbal::Test;
 use Perlbal::Test::WebClient;
